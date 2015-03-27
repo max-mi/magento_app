@@ -18,9 +18,23 @@
       "required": true
     },
     {
-      "name": "access_token",
+      "name": "consumer_key",
       "type": "text",
-      "required": true
+      "required": true,
+      "label": "Consumer Key"
+    },
+    {
+      "name": "consumer_secret",
+      "type": "text",
+      "required": true,
+      "label": "Consumer Secret Key"
+    },
+    {
+      "name": "admin_path",
+      "type": "text",
+      "required": false,
+      "default": "admin",
+      "label": "Administration Panel Path"
     },
     {
       "name": "order_id_field_id",
