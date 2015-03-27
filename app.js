@@ -207,6 +207,9 @@
                 } else {
                     this.showError(this.I18n.t('global.error.title'), this.I18n.t('global.error.noprofile'));
                 }
+            } else if (resp.status === 401) {
+                this.store('oauth', false);
+                this.init(this.appCreated);
             } else {
                 this.handleFail();
             }
@@ -232,6 +235,7 @@
         },
         queryCustomer: function () {
             this.switchTo('requesting');
+            console.info('storeAuth data');
             console.log(this.store('oauth'));
             if (this.store('oauth')) {
                 this.oauth = this.store('oauth');
