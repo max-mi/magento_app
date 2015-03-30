@@ -1,9 +1,9 @@
 (function () {
     'use_strict';
-    
+    //Comment this lines to enable debug mode
     console.log = function() {};
     console.info = function() {};
-    
+    //Module uses Magento OAuth REST API 1.0 With HMAC-SHA1 Signature Encoding
     return {
         // Properties
         defaultState: 'loading',
@@ -65,14 +65,16 @@
             oauth_consumer_key: false
         },
         requests: {
-            'getProfile': function (email) {
-                return this._getRequest(helpers.fmt(this.resources.PROFILE_URI, this.magentoEndpoint, email), 'GET');
-            },
+            //First step of Magento OAuth authorizaion
             'initiate': function () {
                 return this._getSignedRequest(helpers.fmt(this.resources.INITIATE, this.magentoEndpoint) + "?oauth_callback=" + encodeURIComponent(this.magentoInitiate.oauth_callback), this.magentoInitiate);
             },
+            //Receive access token to Magento OAuth
             'token': function () {
                 return this._getSignedRequest(helpers.fmt(this.resources.TOKEN, this.magentoEndpoint), this.magentoToken);
+            },
+            'getProfile': function (email) {
+                return this._getRequest(helpers.fmt(this.resources.PROFILE_URI, this.magentoEndpoint, email), 'GET');
             },
             'getOrder': function (orderId) {
                 return this._getRequest(helpers.fmt(this.resources.ORDER_URI, this.magentoEndpoint, orderId), 'GET');
@@ -81,6 +83,20 @@
                 url: '/api/v2/users/me.json'
             }
         },
+        //Switch view to Magento authorization iframe, second step of OAuth authorization
+        //data - query string which contains temporary oauth_token and oauth_token_secret
+        login: function (data) {
+            console.info("login()");
+            console.log(data);
+            //Check if Magento use SSL
+            var error = this.magentoEndpoint.indexOf('http://') > -1;
+            this.magentoAuthorize.oauth_token = this._getParameterByName(data.responseText)['oauth_token'];
+            this.magentoAuthorize.oauth_token_secret = this._getParameterByName(data.responseText)['oauth_token_secret'];
+            this.oauth_token_secret = this._getParameterByName(data.responseText)['oauth_token_secret'];
+            this.switchTo('magento', {magentoAuthorize: this.magentoEndpoint + "/" + this.settings.admin_path + "/oauth_authorize?oauth_token=" + this.magentoAuthorize.oauth_token, error: error, message: this.I18n.t('global.error.ssl')});
+        },
+        //Receive tokens from connected iframe via SDK
+        //data - query string with params
         receiveTokens: function (data) {
             console.info("receiveTokens()");
             if (data !== undefined) {
@@ -88,6 +104,7 @@
                 this.ajax('token');
             }
         },
+        //Prepare request for receiving OAuth access token
         setMagentoToken: function (tokens) {
             console.info("setMagentoToken()");
             console.log(this.settings);
@@ -99,16 +116,19 @@
             this.magentoToken.oauth_signature = this._generateSignature(encodeURIComponent(helpers.fmt(this.resources.TOKEN, this.magentoEndpoint)), this.magentoToken);
             console.log(this.magentoToken);
         },
+        //Prepare Data request to Magento
         prepareOauth: function (data) {
             if (data.responseText) {
                 this.oauth.oauth_token = this._getParameterByName(data.responseText)['oauth_token'];
                 this.oauth_token_secret = this._getParameterByName(data.responseText)['oauth_token_secret'];
                 this.store('oauth_token_secret', this._getParameterByName(data.responseText)['oauth_token_secret']);
                 this.oauth.oauth_consumer_key = this.settings.consumer_key;
+                //Store access token in local storage
                 this.store('oauth', this.oauth);
                 this.init(this.appCreated);
             }
         },
+        //Fill data for first step OAuth authorization
         oauthLogin: function () {
             if (!this.magentoInitiate.oauth_token) {
                 this.magentoInitiate.oauth_timestamp = this._getTimestamp();
@@ -237,6 +257,7 @@
             this.switchTo('requesting');
             console.info('storeAuth data');
             console.log(this.store('oauth'));
+            //check access token in local storage
             if (this.store('oauth')) {
                 this.oauth = this.store('oauth');
                 this.oauth_token_secret = this.store('oauth_token_secret');
@@ -352,10 +373,9 @@
             var oauth_token = "";
             return oauth_token;
         },
+        //Generate signature according to OAuth 1.0 RFC http://oauth.net/core/1.0a/#anchor13
         _generateSignature: function (encodedUrl, params, type) {
             console.info("generateSignature()");
-            //Create Signature Base String using formula
-            //var baseSign2 = "POST" + "&" + encodeURIComponent("http://maxmi.modulesgarden-demo.com/oauth/initiate").toString() + "&" + encodeURIComponent("oauth_callback") + "%3D" + encodeURIComponent(encodeURIComponent(this.magentoInitiate.oauth_callback)) + "%26" + encodeURIComponent("oauth_consumer_key") + "%3D" + encodeURIComponent(this.magentoInitiate.oauth_consumer_key) + "%26" + encodeURIComponent("oauth_nonce") + "%3D" + encodeURIComponent(this.magentoInitiate.oauth_nonce) + "%26" + encodeURIComponent("oauth_signature_method") + "%3D" + encodeURIComponent("HMAC-SHA1") + "%26" + encodeURIComponent("oauth_timestamp") + "%3D" + encodeURIComponent(this.magentoInitiate.oauth_timestamp) + "%26" + encodeURIComponent("oauth_version") + "%3D" + encodeURIComponent("1.0");
             if (type === undefined) {
                 type = "POST";
             }
@@ -404,14 +424,6 @@
                 result += this._nonce_chars.substring(rnum, rnum + 1);
             }
             return result;
-        },
-        login: function (data) {
-            console.info("login()");
-            console.log(data);
-            this.magentoAuthorize.oauth_token = this._getParameterByName(data.responseText)['oauth_token'];
-            this.magentoAuthorize.oauth_token_secret = this._getParameterByName(data.responseText)['oauth_token_secret'];
-            this.oauth_token_secret = this._getParameterByName(data.responseText)['oauth_token_secret'];
-            this.switchTo('magento', {magentoAuthorize: this.magentoEndpoint + "/" + this.settings.admin_path + "/oauth_authorize?oauth_token=" + this.magentoAuthorize.oauth_token});
         },
         _getParameterByName: function (query) {
             var vars = [], hash;

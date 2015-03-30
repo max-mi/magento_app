@@ -1,1 +1,6 @@
+{{#if error}}
+<div class="alert">
+  <p>{{message}}</p>
+</div>
+{{/if}}
 {{iframe magentoAuthorize}}

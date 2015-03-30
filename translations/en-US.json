@@ -28,7 +28,8 @@
       "message": "Please try the previous action again.",
       "server": "The request failed. Please ensure your configuration is correct and try again.",
       "data": "Ticket data could not be read.",
-      "noprofile": "Customer does not exist."
+      "noprofile": "Customer does not exist.",
+      "ssl": "If you have a non ssl Magento instance, you should allow requests to insecure sources."
     },
     "loading": "Waiting for ticket data to load...",
     "requesting": "Requesting data from Magento..."

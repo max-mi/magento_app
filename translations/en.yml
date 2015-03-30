@@ -55,6 +55,10 @@ parts:
       title: "An error occurred"
       value: "An error occurred"
   - translation:
+      key: "txt.apps.magento.global.error.ssl"
+      title: "If you have a non ssl Magento instance, you should allow requests to insecure sources."
+      value: "If you have a non ssl Magento instance, you should allow requests to insecure sources."
+  - translation:
       key: "txt.apps.magento.global.error.message"
       title: "Please try the previous action again"
       value: "Please try the previous action again."
